@@ -100,4 +100,75 @@ def run_main_selenium():
                 driver.execute_script("""
                     var playButton = document.evaluate("//div[@id='vplayer']", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
                     if (playButton) {
-                        playButton.scrollIntoVie
+                        playButton.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        setTimeout(function() { playButton.click(); }, 500);
+                    }""")
+                time.sleep(5)
+                driver.save_screenshot(f"screenshot_{i}.png")
+                random_mouse_move(driver)
+                random_mouse_move(driver)
+
+            except Exception as e:
+                    print(f"Error: {e}")
+                    try:
+                        driver.execute_script("""
+                                    var element = document.getElementById('vplayer');
+                                  var clickEvent = new MouseEvent('click', {
+                                    bubbles: true,
+                                    cancelable: true,
+                                    view: window
+                                  });
+                                  element.dispatchEvent(clickEvent); """)
+
+
+                        try:
+                                element = driver.find_element(By.XPATH, play_button_xpath)
+                                actions = ActionChains(driver)
+
+                                # Click tại tọa độ (x_offset, y_offset) so với phần tử
+                                actions.move_to_element_with_offset(element, 5, 5).click().perform()
+                                time.sleep(30)
+                                driver.save_screenshot("screenshot_{}.png".format(i))
+                        except Exception as e:
+                                print(f"PyAutoGUI click failed: {e}")
+
+                    except Exception as click_error:
+                        print(f"Khong the click toa do: {click_error}")
+        time.sleep(150)
+        driver.save_screenshot("screenshot_final.png")
+
+
+      # Tải video
+      download_button_xpath = "//a[@class='btn btn-success btn-lg btn-download btn-download-n']"
+      for i in range(5):
+          try:
+                  # Find and click the download button
+                  download_button = driver.find_element(By.XPATH, download_button_xpath)
+                  download_button.click()
+                  time.sleep(random.uniform(1, 3))
+                  random_mouse_move()
+                  driver.save_screenshot(f"screenshot_{i}.png")
+
+                  # Handle captcha if present
+                  try:
+                      captcha_iframe = WebDriverWait(driver, 10).until(
+                          ec.presence_of_element_located((By.TAG_NAME, 'iframe'))
+                      )
+                      ActionChains(driver).move_to_element(captcha_iframe).click().perform()
+
+                      captcha_box = WebDriverWait(driver, 10).until(
+                          ec.presence_of_element_located((By.ID, 'g-recaptcha-response'))
+                      )
+                      driver.execute_script("arguments[0].click()", captcha_box)
+                      time.sleep(10)
+                  except Exception:
+                      print("Captcha not found")
+          except Exception as e:
+                  print(f"Error: {e}")
+
+
+      # driver.save_screenshot("screenshot_{}.png".format(time.time()))
+      # time.sleep(150)
+      driver.quit()
+
+run_main_selenium()
